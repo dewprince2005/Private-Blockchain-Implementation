@@ -1,0 +1,435 @@
+import React, { useState, useEffect } from 'react';
+import { Wallet, Plus, Search, FileText, User, Calendar, DollarSign, Shield, Network, Server, Database } from 'lucide-react';
+
+const BlockchainDApp = () => {
+  const [activeTab, setActiveTab] = useState('assets');
+  const [isConnected, setIsConnected] = useState(false);
+  const [selectedNetwork, setSelectedNetwork] = useState('ethereum');
+  const [account, setAccount] = useState('');
+  const [assets, setAssets] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [showAddAsset, setShowAddAsset] = useState(false);
+  
+  // Network configurations
+  const networks = {
+    ethereum: {
+      name: 'Ethereum Private Network',
+      rpcUrl: 'http://localhost:8545',
+      chainId: 1337,
+      icon: '⟠',
+      color: 'blue'
+    },
+    fabric: {
+      name: 'Hyperledger Fabric Network',
+      rpcUrl: 'http://localhost:7051',
+      chainId: 'mychannel',
+      icon: '🔗',
+      color: 'purple'
+    }
+  };
+
+  // Mock asset data
+  const mockAssets = [
+    {
+      id: 'asset1',
+      name: 'Digital Certificate #001',
+      owner: 'Alice Johnson',
+      value: 1500,
+      created: '2024-01-15',
+      type: 'Certificate',
+      status: 'Active',
+      hash: '0x1a2b3c...',
+      network: 'ethereum'
+    },
+    {
+      id: 'asset2',
+      name: 'Property Deed #789',
+      owner: 'Bob Smith',
+      value: 250000,
+      created: '2024-01-10',
+      type: 'Property',
+      status: 'Active',
+      hash: '0x4d5e6f...',
+      network: 'fabric'
+    },
+    {
+      id: 'asset3',
+      name: 'Artwork License #456',
+      owner: 'Carol Davis',
+      value: 5000,
+      created: '2024-01-08',
+      type: 'License',
+      status: 'Pending',
+      hash: '0x7g8h9i...',
+      network: 'ethereum'
+    }
+  ];
+
+  const [newAsset, setNewAsset] = useState({
+    name: '',
+    type: 'Certificate',
+    value: '',
+    description: ''
+  });
+
+  useEffect(() => {
+    setAssets(mockAssets);
+  }, []);
+
+  const connectWallet = async () => {
+    setLoading(true);
+    // Simulate connection
+    setTimeout(() => {
+      setIsConnected(true);
+      setAccount(selectedNetwork === 'ethereum' ? '0x1234...5678' : 'user@org1.example.com');
+      setLoading(false);
+    }, 1000);
+  };
+
+  const switchNetwork = (network) => {
+    setSelectedNetwork(network);
+    setIsConnected(false);
+    setAccount('');
+  };
+
+  const handleAddAsset = async () => {
+    if (!newAsset.name || !newAsset.value) return;
+    
+    setLoading(true);
+    
+    // Simulate blockchain transaction
+    setTimeout(() => {
+      const asset = {
+        id: `asset${Date.now()}`,
+        name: newAsset.name,
+        owner: account.includes('0x') ? 'You' : 'You',
+        value: parseInt(newAsset.value),
+        created: new Date().toISOString().split('T')[0],
+        type: newAsset.type,
+        status: 'Active',
+        hash: `0x${Math.random().toString(16).substr(2, 8)}...`,
+        network: selectedNetwork
+      };
+      
+      setAssets([...assets, asset]);
+      setNewAsset({ name: '', type: 'Certificate', value: '', description: '' });
+      setShowAddAsset(false);
+      setLoading(false);
+    }, 2000);
+  };
+
+  const NetworkCard = ({ network, config, isActive }) => (
+    <div
+      onClick={() => switchNetwork(network)}
+      className={`p-6 rounded-xl border-2 cursor-pointer transition-all ${
+        isActive 
+          ? `border-${config.color}-500 bg-${config.color}-50` 
+          : 'border-gray-200 hover:border-gray-300'
+      }`}
+    >
+      <div className="flex items-center space-x-3 mb-3">
+        <span className="text-3xl">{config.icon}</span>
+        <div>
+          <h3 className="font-semibold text-lg">{config.name}</h3>
+          <p className="text-sm text-gray-600">Chain ID: {config.chainId}</p>
+        </div>
+      </div>
+      <div className="flex items-center space-x-2 text-sm text-gray-500">
+        <Server className="w-4 h-4" />
+        <span>{config.rpcUrl}</span>
+      </div>
+      {isActive && (
+        <div className="mt-3 flex items-center space-x-2">
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+          <span className="text-sm text-green-600">Connected</span>
+        </div>
+      )}
+    </div>
+  );
+
+  const AssetCard = ({ asset }) => (
+    <div className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+      <div className="flex justify-between items-start mb-4">
+        <div className="flex items-center space-x-2">
+          <FileText className="w-5 h-5 text-blue-600" />
+          <h3 className="font-semibold text-lg">{asset.name}</h3>
+        </div>
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+          asset.status === 'Active' ? 'bg-green-100 text-green-800' :
+          asset.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+          'bg-red-100 text-red-800'
+        }`}>
+          {asset.status}
+        </span>
+      </div>
+      
+      <div className="space-y-3">
+        <div className="flex items-center space-x-2 text-gray-600">
+          <User className="w-4 h-4" />
+          <span className="text-sm">Owner: {asset.owner}</span>
+        </div>
+        <div className="flex items-center space-x-2 text-gray-600">
+          <DollarSign className="w-4 h-4" />
+          <span className="text-sm">Value: ${asset.value.toLocaleString()}</span>
+        </div>
+        <div className="flex items-center space-x-2 text-gray-600">
+          <Calendar className="w-4 h-4" />
+          <span className="text-sm">Created: {asset.created}</span>
+        </div>
+        <div className="flex items-center space-x-2 text-gray-600">
+          <Network className="w-4 h-4" />
+          <span className="text-sm">Network: {networks[asset.network].name}</span>
+        </div>
+      </div>
+      
+      <div className="mt-4 pt-4 border-t border-gray-100">
+        <div className="flex items-center space-x-2 text-xs text-gray-500">
+          <Shield className="w-3 h-3" />
+          <span>Hash: {asset.hash}</span>
+        </div>
+      </div>
+    </div>
+  );
+
+  const AddAssetModal = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-2xl p-8 w-full max-w-md">
+        <h2 className="text-2xl font-bold mb-6">Add New Asset</h2>
+        
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Asset Name</label>
+            <input
+              type="text"
+              value={newAsset.name}
+              onChange={(e) => setNewAsset({...newAsset, name: e.target.value})}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter asset name"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
+            <select
+              value={newAsset.type}
+              onChange={(e) => setNewAsset({...newAsset, type: e.target.value})}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="Certificate">Certificate</option>
+              <option value="Property">Property</option>
+              <option value="License">License</option>
+              <option value="Document">Document</option>
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Value ($)</label>
+            <input
+              type="number"
+              value={newAsset.value}
+              onChange={(e) => setNewAsset({...newAsset, value: e.target.value})}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter asset value"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+            <textarea
+              value={newAsset.description}
+              onChange={(e) => setNewAsset({...newAsset, description: e.target.value})}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              rows={3}
+              placeholder="Enter asset description"
+            />
+          </div>
+        </div>
+        
+        <div className="flex space-x-3 mt-6">
+          <button
+            onClick={() => setShowAddAsset(false)}
+            className="flex-1 py-3 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleAddAsset}
+            disabled={loading || !newAsset.name || !newAsset.value}
+            className="flex-1 py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          >
+            {loading ? 'Creating...' : 'Create Asset'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
+      {/* Header */}
+      <nav className="bg-white border-b border-gray-200 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-3">
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-2 rounded-lg">
+                <Database className="w-6 h-6 text-white" />
+              </div>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Digital Asset Registry
+              </h1>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-600">Network:</span>
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  selectedNetwork === 'ethereum' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
+                }`}>
+                  {networks[selectedNetwork].icon} {networks[selectedNetwork].name.split(' ')[0]}
+                </span>
+              </div>
+              
+              {!isConnected ? (
+                <button
+                  onClick={connectWallet}
+                  disabled={loading}
+                  className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50"
+                >
+                  <Wallet className="w-4 h-4" />
+                  <span>{loading ? 'Connecting...' : 'Connect'}</span>
+                </button>
+              ) : (
+                <div className="flex items-center space-x-3">
+                  <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
+                    {account}
+                  </div>
+                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {!isConnected ? (
+          <div className="space-y-8">
+            <div className="text-center">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                Choose Your Blockchain Network
+              </h2>
+              <p className="text-xl text-gray-600">
+                Select a blockchain network to get started with asset management
+              </p>
+            </div>
+            
+            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              {Object.entries(networks).map(([key, config]) => (
+                <NetworkCard
+                  key={key}
+                  network={key}
+                  config={config}
+                  isActive={selectedNetwork === key}
+                />
+              ))}
+            </div>
+            
+            <div className="text-center">
+              <button
+                onClick={connectWallet}
+                disabled={loading}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-lg text-lg hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50"
+              >
+                {loading ? 'Connecting...' : `Connect to ${networks[selectedNetwork].name}`}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {/* Dashboard Header */}
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900">Asset Dashboard</h2>
+                <p className="text-gray-600">Manage your digital assets on the blockchain</p>
+              </div>
+              <button
+                onClick={() => setShowAddAsset(true)}
+                className="flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="w-5 h-5" />
+                <span>Add Asset</span>
+              </button>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="bg-white p-6 rounded-xl border border-gray-200">
+                <div className="flex items-center space-x-3">
+                  <div className="p-3 bg-blue-100 rounded-lg">
+                    <FileText className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Total Assets</p>
+                    <p className="text-2xl font-bold text-gray-900">{assets.length}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white p-6 rounded-xl border border-gray-200">
+                <div className="flex items-center space-x-3">
+                  <div className="p-3 bg-green-100 rounded-lg">
+                    <DollarSign className="w-6 h-6 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Total Value</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      ${assets.reduce((sum, asset) => sum + asset.value, 0).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white p-6 rounded-xl border border-gray-200">
+                <div className="flex items-center space-x-3">
+                  <div className="p-3 bg-yellow-100 rounded-lg">
+                    <Shield className="w-6 h-6 text-yellow-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Active Assets</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {assets.filter(asset => asset.status === 'Active').length}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white p-6 rounded-xl border border-gray-200">
+                <div className="flex items-center space-x-3">
+                  <div className="p-3 bg-purple-100 rounded-lg">
+                    <Network className="w-6 h-6 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Network</p>
+                    <p className="text-lg font-bold text-gray-900">
+                      {networks[selectedNetwork].icon} {networks[selectedNetwork].name.split(' ')[0]}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Assets Grid */}
+            <div className="space-y-6">
+              <div className="flex items-center space-x-4">
+                <h3 className="text-xl font-semibold text-gray-900">Your Assets</h3>
+                <div className="flex items-center space-x-2">
+                  <Search className="w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search assets..."
+                    className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:gri
